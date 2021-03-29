@@ -90,10 +90,10 @@ class TaskWidget(QtGui.QWidget):
         self.setLayout(self.layout)
 
         self.layout.setContentsMargins(5, 0, 5, 0)
+        self.checkBox.setFixedWidth(15)
         self.fixButton.setFixedWidth(25)
         self.helpButton.setFixedWidth(25)
         self.helpButton.setFixedHeight(25)
-        self.checkBox.setFixedWidth(15)
 
         self.checkButton.clicked.connect(self.taskCheck)
         self.fixButton.clicked.connect(self.taskFix)
@@ -131,10 +131,19 @@ class JanitorWidget(QtGui.QWidget):
         setBgCol(panelWLayout, randomColor())
 
         self.mainCheckBox     = QtGui.QCheckBox()
-        self.mainLaunchButton = QtGui.QPushButton()
+        self.mainLaunchButton = QtGui.QPushButton('GO')
+        self.mainFixButton    = QtGui.QPushButton('fix')
+
+        self.mainCheckBox.setFixedWidth(15)
+        self.mainFixButton.setFixedWidth(25)
+
+
+
         headerWLayout.addWidget(self.mainCheckBox)
         headerWLayout.addWidget(self.mainLaunchButton)
-        headerWLayout.layout.addStretch()
+        headerWLayout.addWidget(self.mainFixButton)
+        # headerWLayout.layout.addStretch()
+        headerWLayout.layout.addSpacing(30)
 
         self.layout.addWidget(headerWLayout)
         self.layout.addWidget(panelWLayout)
