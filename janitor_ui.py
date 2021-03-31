@@ -8,7 +8,6 @@ from PySide import QtCore
 import janitor_cmds as janitorCmds
 import coreUtils
 
-print coreUtils
 class Colors():
     red           = QtGui.QColor(120,   0,   0)
     green         = QtGui.QColor(000, 120,   0)
@@ -75,6 +74,7 @@ class TaskWidget(QtGui.QWidget):
         self.checkBox    = QtGui.QCheckBox()
         self.checkButton = QtGui.QPushButton(task.niceName or '')
         self.fixButton   = QtGui.QPushButton('fix')
+        self.noFixLabel  = QtGui.QLabel()
         self.helpButton  = QtGui.QPushButton('?')
 
         if task.active:
@@ -82,16 +82,25 @@ class TaskWidget(QtGui.QWidget):
         else:
             self.checkBox.setCheckState(QtCore.Qt.Unchecked)
 
+        if self.task.fix is None:
+            self.fixButton.setVisible(False)
+            self.noFixLabel.setVisible(True)
+        else:
+            self.fixButton.setVisible(True)
+            self.noFixLabel.setVisible(False)
+
         self.layout = QtGui.QHBoxLayout(self)
         self.layout.addWidget(self.checkBox)
         self.layout.addWidget(self.checkButton)
         self.layout.addWidget(self.fixButton)
+        self.layout.addWidget(self.noFixLabel)
         self.layout.addWidget(self.helpButton)
         self.setLayout(self.layout)
 
         self.layout.setContentsMargins(5, 0, 5, 0)
         self.checkBox.setFixedWidth(15)
         self.fixButton.setFixedWidth(25)
+        self.noFixLabel.setFixedWidth(25)
         self.helpButton.setFixedWidth(25)
         self.helpButton.setFixedHeight(25)
 
@@ -104,7 +113,8 @@ class TaskWidget(QtGui.QWidget):
         self.task.check()
 
     def taskFix(self):
-        self.task.fix()
+        if self.task.fix is not None:
+            self.task.fix()
 
     def setTaskActive(self, state):
         if state > 0:
@@ -220,17 +230,12 @@ class JanitorUi(QtGui.QWidget):
         self.allTaskWidgets = []
         self.janitorsPanels = None
 
-        # top part with conbobox and checkBox and go button
-        # self.janitorsWLayout = LayoutWidget(mode='horizontal', parent=self)
+        self.fakeScene = FakeScene()  # Une fake scene pour faire des pseudo checks/fix
 
-        # self.allTasksCheckBox = QtGui.QCheckBox()
+
+        # top part with combobox and checkBox and go button
         self.janitorsCombox   = QtGui.QComboBox(parent=self)
-
-        # self.janitorsWLayout.addWidget(self.allTasksCheckBox)
-        # self.janitorsWLayout.addWidget(self.janitorsCombox)
-
-        # self.allTasksCheckBox.setFixedWidth(15)
-        # self.janitorsWLayout.setContentsMargins(5, 0, 5, 10)
+        self.resetFakeSceneBtn = QtGui.QPushButton('ResetFakeScene')
 
 
         # Bottom part where all task button will go
@@ -240,9 +245,8 @@ class JanitorUi(QtGui.QWidget):
         # main layout
         self.mainLayout = QtGui.QVBoxLayout(self)
         self.mainLayout.addWidget(self.janitorsCombox)
+        self.mainLayout.addWidget(self.resetFakeSceneBtn)
         self.mainLayout.addWidget(self.panelsWLayout)
-
-
 
 
         self.populateJanitors()
@@ -250,8 +254,24 @@ class JanitorUi(QtGui.QWidget):
 
         self.janitorsCombox.currentIndexChanged[int].connect(self.setCurrentJanitor)
         # self.allTasksCheckBox.stateChanged.connect(self.changeAllTasksActiveStatus)
+        self.resetFakeSceneBtn.clicked.connect(self.resetFakeScene)
 
         self.setCurrentJanitor(0)
+
+    def resetFakeScene(self):
+        self.fakeScene.reset()
+
+    def populateJanitors(self):
+
+
+        janitorsList  = [janitorCmds.FacialJanitor,
+                         janitorCmds.ModelCharsJanitor,
+                        ]
+        self.janitors = [x(fakeScene=self.fakeScene) for x in janitorsList]
+
+        self.janitorsCombox.clear()
+        for janitor in self.janitors:
+            self.janitorsCombox.addItem(janitor.niceName or janitor.__class__.__name__)
 
 
     def populateJanitorsPanels(self):
@@ -262,17 +282,6 @@ class JanitorUi(QtGui.QWidget):
             self.janitorsPanels.append(panel)
             self.panelsWLayout.addWidget(panel)
 
-
-    def populateJanitors(self):
-        janitorsList  = [janitorCmds.FacialJanitor,
-                         janitorCmds.ModelCharsJanitor,
-                        ]
-
-        self.janitors       = [x() for x in janitorsList]
-
-        self.janitorsCombox.clear()
-        for janitor in self.janitors:
-            self.janitorsCombox.addItem(janitor.niceName or janitor.__class__.__name__)
 
     def setCurrentJanitor(self, janitorIndex):
         # currentJanitor = self.janitors[janitorIndex]
@@ -285,6 +294,29 @@ class JanitorUi(QtGui.QWidget):
     def onTaskCheck(self):
         sender = self.sender()
         sender.task.check()
+
+
+
+
+
+class FakeScene(object):
+    def __init__(self):
+        self.data = dict()
+        self.reset()
+
+    def reset(self):
+        self.data['modelDoublons']       = ['|group1|body_msh', '|group2|body_msh']
+        self.data['modelShaders']        = ['lambert1', 'lambert2']
+
+
+        self.data['facialVersion']       = 4.1
+        self.data['facialNastyRefEdits'] = ['ACTOR:spine.rotateOrder', 'ACTOR:neck.rotateOrder', 'ACTOR:head.rotateOrder']
+        self.data['facialDkTags']        = ['EYES_AREA_CTRL_l_eye_blend', 'EYES_AREA_CTRL_r_eye_blend', 'EYES_AREA_CTRL_l_mouth_up']
+
+
+
+
+
 
 if __name__=="__main__":
 
