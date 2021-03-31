@@ -98,7 +98,7 @@ class TaskShaders(TaskBase):
     def check(self):
         super(TaskShaders, self).check()
         self.toFix = []
-        sceneShaders = self.fakeScene.data.get('modelShaders')
+        sceneShaders = self.fakeScene.data.get('modelShaders', [])
         for shader in sceneShaders:
             if not shader.endswith('_mtl'):
                 self.toFix.append(shader)
@@ -113,7 +113,7 @@ class TaskShaders(TaskBase):
         if not _toFix:
             return
 
-        sceneShaders = self.fakeScene.data.get('modelShaders')
+        sceneShaders = self.fakeScene.data.get('modelShaders', [])
 
         for item in _toFix:
             if item not in sceneShaders:

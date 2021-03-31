@@ -9,21 +9,24 @@ import janitor_cmds as janitorCmds
 import coreUtils
 
 class Colors():
-    red           = QtGui.QColor(120,   0,   0)
-    green         = QtGui.QColor(000, 120,   0)
-    blue          = QtGui.QColor(100, 100, 220)
-    orange        = QtGui.QColor(200, 100,   0)
-    yellow        = QtGui.QColor(255, 255,   0)
+    # red           = QtGui.QColor(120, 000, 000)
+    # green         = QtGui.QColor(000, 120, 000)
+    # blue          = QtGui.QColor(100, 100, 220)
+    # orange        = QtGui.QColor(200, 100, 000)
+    # yellow        = QtGui.QColor(255, 255, 000)
 
-    green_dim     = QtGui.QColor(050,  90,  50)
-    orange_dim    = QtGui.QColor(100,  50,  50)
-    blue_dim      = QtGui.QColor(50,  50, 110)
-    yellow_dim    = QtGui.QColor(180, 180,   0)
+    red_dim       = QtGui.QColor(90, 025, 025)
+
+    green_dim     = QtGui.QColor(85, 107, 47)
+    # orange_dim    = QtGui.QColor(100, 050,  50)
+    orange_dim    = QtGui.QColor(255, 102, 0)
+    blue_dim      = QtGui.QColor(50,  050, 110)
+    yellow_dim    = QtGui.QColor(180, 180, 000)
 
     grey          = QtGui.QColor(100, 100, 100)
-    darkGrey      = QtGui.QColor(050,  50,  50)
-    darkerGrey    = QtGui.QColor(040,  40,  40)
-    black         = QtGui.QColor(000,   0,   0)
+    darkGrey      = QtGui.QColor(050, 050, 050)
+    darkerGrey    = QtGui.QColor(040, 040, 040)
+    black         = QtGui.QColor(000, 000, 000)
 
 
 def randomColor(alpha=255):
@@ -77,6 +80,11 @@ class TaskWidget(QtGui.QWidget):
         self.noFixLabel  = QtGui.QLabel()
         self.helpButton  = QtGui.QPushButton('?')
 
+        self.neutralColor = Colors.grey
+        self.okColor      = Colors.green_dim
+        self.pbColor      = Colors.orange_dim
+
+
         if task.active:
             self.checkBox.setCheckState(QtCore.Qt.Checked)
         else:
@@ -108,13 +116,26 @@ class TaskWidget(QtGui.QWidget):
         self.fixButton.clicked.connect(self.taskFix)
         self.checkBox.stateChanged.connect(self.setTaskActive)
 
+        self.resetColor()
+
+    def resetColor(self):
+        setBgCol(self.checkButton, self.neutralColor)
+
+    def updateColor(self):
+        if self.task.toFix:
+            setBgCol(self.checkButton, self.pbColor)
+        else:
+            setBgCol(self.checkButton, self.okColor)
+
 
     def taskCheck(self):
         self.task.check()
+        self.updateColor()
 
     def taskFix(self):
         if self.task.fix is not None:
             self.task.fix()
+        self.taskCheck()
 
     def setTaskActive(self, state):
         if state > 0:
@@ -125,9 +146,9 @@ class TaskWidget(QtGui.QWidget):
 
 
 
-class JanitorWidget(QtGui.QWidget):
+class JanitorPanel(QtGui.QWidget):
     def __init__(self, janitor, parent=None):
-        super(JanitorWidget, self).__init__(parent=parent)
+        super(JanitorPanel, self).__init__(parent=parent)
         self.janitor      = janitor
         self.tasksWidgets = []
 
@@ -177,6 +198,9 @@ class JanitorWidget(QtGui.QWidget):
     def mainLaunch(self):
         self.debug()
         self.janitor.check()
+        for taskWidget in self.tasksWidgets:
+            if taskWidget.task.active:
+                taskWidget.updateColor()
 
     def debug(self):
         tasks = [taskWidget.task for taskWidget in self.tasksWidgets]
@@ -278,7 +302,7 @@ class JanitorUi(QtGui.QWidget):
         self.janitorsPanels = []
 
         for janitor in self.janitors:
-            panel = JanitorWidget(janitor)
+            panel = JanitorPanel(janitor)
             self.janitorsPanels.append(panel)
             self.panelsWLayout.addWidget(panel)
 
@@ -292,6 +316,7 @@ class JanitorUi(QtGui.QWidget):
 
 
     def onTaskCheck(self):
+        print 'asfasdfgsdgfsdfg'
         sender = self.sender()
         sender.task.check()
 
@@ -306,7 +331,7 @@ class FakeScene(object):
 
     def reset(self):
         self.data['modelDoublons']       = ['|group1|body_msh', '|group2|body_msh']
-        self.data['modelShaders']        = ['lambert1', 'lambert2']
+        # self.data['modelShaders']        = ['lambert1', 'lambert2']
 
 
         self.data['facialVersion']       = 4.1
@@ -327,7 +352,7 @@ if __name__=="__main__":
     janitor_ui.show()
 
     # janitor = janitorCmds.FacialJanitor()
-    # janitorPanel = JanitorWidget(janitor)
+    # janitorPanel = JanitorPanel(janitor)
     # janitorPanel.show()
 
     sys.exit(app.exec_())
