@@ -21,9 +21,11 @@ class TaskBase(object):
             print 'Fixing %s:' %self.niceName
 
 
-    def checkAndFix(self, verbose=True):
+    def checkFixCheck(self, verbose=True):
         self.check(verbose=verbose)
-        self.fix(toFix=self.toFix, verbose=verbose)
+        if self.fix:
+            self.fix(toFix=self.toFix, verbose=verbose)
+            self.check(verbose=verbose)
 
 
 class JanitorBase(object):
@@ -52,7 +54,7 @@ class JanitorBase(object):
             if not task.active:
                 continue
             # print '  Running check ', task
-            task.check()
+            task.check(verbose=self.verbose)
 
 
     def fix(self):
@@ -69,6 +71,11 @@ class JanitorBase(object):
             task.fix(task.toFix, verbose=self.verbose)
 
 
+    def checkFixCheck(self):
+        for task in self.tasks:
+            if not task.active:
+                continue
+            task.checkFixCheck(verbose=self.verbose)
 
 
 
@@ -82,8 +89,10 @@ class TaskDoublons(TaskBase):
 
         self.fix = None
 
-    def check(self):
-        super(TaskDoublons, self).check()
+    def check(self, verbose=False):
+        super(TaskDoublons, self).check(verbose=False)
+
+        if not self.fakeScene: return
         self.toFix = self.fakeScene.data.get('modelDoublons')
 
         self.checkResult = self.toFix
@@ -95,9 +104,11 @@ class TaskShaders(TaskBase):
         super(TaskShaders, self).__init__(*args, **kwargs)
         self.niceName = 'Shaders'
 
-    def check(self):
-        super(TaskShaders, self).check()
+    def check(self, verbose=False):
+        super(TaskShaders, self).check(verbose=False)
         self.toFix = []
+
+        if not self.fakeScene: return
         sceneShaders = self.fakeScene.data.get('modelShaders', [])
         for shader in sceneShaders:
             if not shader.endswith('_mtl'):
@@ -108,10 +119,12 @@ class TaskShaders(TaskBase):
 
 
     def fix(self, toFix=None, verbose=False):
-        super(TaskShaders, self).fix()
+        super(TaskShaders, self).fix(verbose=False)
         _toFix = toFix or self.toFix
         if not _toFix:
             return
+
+        if not self.fakeScene: return
 
         sceneShaders = self.fakeScene.data.get('modelShaders', [])
 
@@ -143,9 +156,11 @@ class TaskFacialVersion(TaskBase):
         super(TaskFacialVersion, self).__init__(*args, **kwargs)
         self.niceName = 'Facial Version'
 
-    def check(self):
-        super(TaskFacialVersion, self).check()
+    def check(self, verbose=False):
+        super(TaskFacialVersion, self).check(verbose=False)
         self.toFix = []
+
+        if not self.fakeScene: return
         facialVersion = self.fakeScene.data.get('facialVersion')
         if facialVersion is None:
             print 'WARNING, NO FAICAL FOUND'
@@ -157,12 +172,13 @@ class TaskFacialVersion(TaskBase):
 
 
     def fix(self, toFix=None, verbose=False):
-        super(TaskFacialVersion, self).fix()
+        super(TaskFacialVersion, self).fix(verbose=False)
         self.fixResult = None
         _toFix = toFix or self.toFix
         if not _toFix:
             return
 
+        if not self.fakeScene: return
         print('updating %s to version 4.2' %_toFix)
         self.fakeScene.data['facialVersion'] = 4.2
 
@@ -172,20 +188,24 @@ class TaskFacialNastyRefEdits(TaskBase):
         super(TaskFacialNastyRefEdits, self).__init__(*args, **kwargs)
         self.niceName = 'Nasty Reference Edits'
 
-    def check(self):
-        super(TaskFacialNastyRefEdits, self).check()
+    def check(self, verbose=False):
+        super(TaskFacialNastyRefEdits, self).check(verbose=False)
+
+        if not self.fakeScene: return
         self.toFix = self.fakeScene.data.get('facialNastyRefEdits')
 
         self.checkResult = self.toFix
         print 'toFix =', self.toFix
 
     def fix(self, toFix=None, verbose=False):
-        super(TaskFacialNastyRefEdits, self).fix()
+        super(TaskFacialNastyRefEdits, self).fix(verbose=False)
         self.fixResult = None
         _toFix = toFix or self.toFix
 
         if not _toFix:
             return
+
+        if not self.fakeScene: return
 
         nastyRefEdits = self.fakeScene.data.get('facialNastyRefEdits', [])
 
@@ -201,23 +221,26 @@ class TaskFacialDKsTag(TaskBase):
         super(TaskFacialDKsTag, self).__init__(*args, **kwargs)
         self.niceName = 'Driven Keys Tags'
 
-    def check(self):
-        super(TaskFacialDKsTag, self).check()
-        self.toFix = self.fakeScene.data.get('facialDkTags')
+    def check(self, verbose=False):
+        super(TaskFacialDKsTag, self).check(verbose=False)
 
+        if not self.fakeScene: return
+
+        self.toFix = self.fakeScene.data.get('facialDkTags')
         self.checkResult = self.toFix
         print 'toFix =', self.toFix
 
     def fix(self, toFix=None, verbose=False):
-        super(TaskFacialDKsTag, self).fix()
+        super(TaskFacialDKsTag, self).fix(verbose=False)
         self.fixResult = None
         _toFix = toFix or self.toFix
 
         if not _toFix:
             return
 
-        facialDks = self.fakeScene.data.get('facialDkTags', [])
+        if not self.fakeScene: return
 
+        facialDks = self.fakeScene.data.get('facialDkTags', [])
         for item in list(_toFix):
             if item not in facialDks:
                 print 'Warning, drivenKey %s does not exist' %item

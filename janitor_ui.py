@@ -193,14 +193,25 @@ class JanitorPanel(QtGui.QWidget):
 
         self.mainCheckBox.stateChanged.connect(self.changeAllTasksActiveStatus)
         self.mainLaunchButton.clicked.connect(self.mainLaunch)
-        # self.mainLaunchButton.clicked.connect(self.debug)
+        self.mainFixButton.clicked.connect(self.mainFix)
+
+
+    def updateTasksColors(self):
+        for taskWidget in self.tasksWidgets:
+            if taskWidget.task.active:
+                taskWidget.updateColor()
+
 
     def mainLaunch(self):
         self.debug()
         self.janitor.check()
-        for taskWidget in self.tasksWidgets:
-            if taskWidget.task.active:
-                taskWidget.updateColor()
+        self.updateTasksColors()
+
+    def mainFix(self):
+        self.debug()
+        self.janitor.checkFixCheck()
+        self.updateTasksColors()
+
 
     def debug(self):
         tasks = [taskWidget.task for taskWidget in self.tasksWidgets]
