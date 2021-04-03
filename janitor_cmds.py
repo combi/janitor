@@ -5,8 +5,8 @@ class TaskBase(object):
         self.fixResult   = None
 
         self.niceName    = self.__class__.__name__
-        self.description = 'TaskBase does amazing things'
-        self.fakeScene = fakeScene
+        self.description = 'This task probably does amazing things'
+        self.fakeScene   = fakeScene
 
     def check(self, verbose=True):
         if verbose:
@@ -88,6 +88,7 @@ class TaskDoublons(TaskBase):
         self.niceName = 'Doublons'
 
         self.fix = None
+        self.description = 'Recense les objets qui ont le meme nom.'
 
     def check(self, verbose=False):
         super(TaskDoublons, self).check(verbose=False)
@@ -103,6 +104,7 @@ class TaskShaders(TaskBase):
     def __init__(self, *args, **kwargs):
         super(TaskShaders, self).__init__(*args, **kwargs)
         self.niceName = 'Shaders'
+        self.description = 'Les shaders doivent doivent avoir "_MTL" comme suffixe.'
 
     def check(self, verbose=False):
         super(TaskShaders, self).check(verbose=False)
@@ -120,6 +122,8 @@ class TaskShaders(TaskBase):
 
     def fix(self, toFix=None, verbose=False):
         super(TaskShaders, self).fix(verbose=False)
+        self.fixResult = []
+
         _toFix = toFix or self.toFix
         if not _toFix:
             return
@@ -134,7 +138,8 @@ class TaskShaders(TaskBase):
             else:
                 sceneShaders.remove(item)
                 sceneShaders.append('%s_mtl' %item)
-            print item
+                self.fixResult.append(item)
+        print('Fixed %s' %self.fixResult)
 
 
 
@@ -155,6 +160,7 @@ class TaskFacialVersion(TaskBase):
     def __init__(self, *args, **kwargs):
         super(TaskFacialVersion, self).__init__(*args, **kwargs)
         self.niceName = 'Facial Version'
+        self.description = 'Le facial devrait etre en version 4.2.'
 
     def check(self, verbose=False):
         super(TaskFacialVersion, self).check(verbose=False)
@@ -179,7 +185,9 @@ class TaskFacialVersion(TaskBase):
             return
 
         if not self.fakeScene: return
-        print('updating %s to version 4.2' %_toFix)
+        # print('updating %s to version 4.2' %_toFix)
+        print('Fixed %s' %_toFix)
+        self.fixResult = _toFix
         self.fakeScene.data['facialVersion'] = 4.2
 
 
@@ -187,6 +195,7 @@ class TaskFacialNastyRefEdits(TaskBase):
     def __init__(self, *args, **kwargs):
         super(TaskFacialNastyRefEdits, self).__init__(*args, **kwargs)
         self.niceName = 'Nasty Reference Edits'
+        self.description = 'La scene de facial ne devrait pas contenir certains refEdits. Certains peuvent etre dus a des bugs maya ou dans l\'un de nos tools, d\'autres a des erreurs de manipulations.'
 
     def check(self, verbose=False):
         super(TaskFacialNastyRefEdits, self).check(verbose=False)
@@ -199,7 +208,8 @@ class TaskFacialNastyRefEdits(TaskBase):
 
     def fix(self, toFix=None, verbose=False):
         super(TaskFacialNastyRefEdits, self).fix(verbose=False)
-        self.fixResult = None
+        self.fixResult = []
+
         _toFix = toFix or self.toFix
 
         if not _toFix:
@@ -214,12 +224,16 @@ class TaskFacialNastyRefEdits(TaskBase):
                 print 'Warning, no refEdit found as %s' %item
             else:
                 nastyRefEdits.remove(item)
+                self.fixResult.append(item)
+        print('Fixed %s' %self.fixResult)
+
 
 
 class TaskFacialDKsTag(TaskBase):
     def __init__(self, *args, **kwargs):
         super(TaskFacialDKsTag, self).__init__(*args, **kwargs)
         self.niceName = 'Driven Keys Tags'
+        self.description = 'Les drivenKeys utilisees dans le facial devraient etre taggees'
 
     def check(self, verbose=False):
         super(TaskFacialDKsTag, self).check(verbose=False)
@@ -232,7 +246,7 @@ class TaskFacialDKsTag(TaskBase):
 
     def fix(self, toFix=None, verbose=False):
         super(TaskFacialDKsTag, self).fix(verbose=False)
-        self.fixResult = None
+        self.fixResult = []
         _toFix = toFix or self.toFix
 
         if not _toFix:
@@ -246,6 +260,8 @@ class TaskFacialDKsTag(TaskBase):
                 print 'Warning, drivenKey %s does not exist' %item
             else:
                 facialDks.remove(item)
+                self.fixResult.append(item)
+        print('Fixed %s' %self.fixResult)
 
 class FacialJanitor(JanitorBase):
     movie = 'dm4'

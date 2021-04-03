@@ -62,7 +62,7 @@ class LayoutWidget(QtGui.QWidget):
     def addWidget(self, *args, **kwargs):
         self.layout.addWidget(*args, **kwargs)
 
-    def setmargins(self, left=0, top=0, right=0, bottom=0):
+    def setMargins(self, left=0, top=0, right=0, bottom=0):
         self.layout.setContentsMargins(left, top, right, bottom)
 
 
@@ -79,6 +79,9 @@ class TaskWidget(QtGui.QWidget):
         self.fixButton   = QtGui.QPushButton('fix')
         self.noFixLabel  = QtGui.QLabel()
         self.helpButton  = QtGui.QPushButton('?')
+        self.descriptionLabel = QtGui.QLabel(self.task.description)
+        self.descriptionLabel.setWordWrap(True)
+        self.descriptionLabel.setVisible(False)
 
         self.neutralColor = Colors.grey
         self.okColor      = Colors.green_dim
@@ -97,15 +100,21 @@ class TaskWidget(QtGui.QWidget):
             self.fixButton.setVisible(True)
             self.noFixLabel.setVisible(False)
 
-        self.layout = QtGui.QHBoxLayout(self)
-        self.layout.addWidget(self.checkBox)
-        self.layout.addWidget(self.checkButton)
-        self.layout.addWidget(self.fixButton)
-        self.layout.addWidget(self.noFixLabel)
-        self.layout.addWidget(self.helpButton)
+        self.buttonsLayout = LayoutWidget(mode='horizontal', parent=self)
+        self.buttonsLayout.setMargins(5, 0, 5, 0)
+
+        self.buttonsLayout.addWidget(self.checkBox)
+        self.buttonsLayout.addWidget(self.checkButton)
+        self.buttonsLayout.addWidget(self.fixButton)
+        self.buttonsLayout.addWidget(self.noFixLabel)
+        self.buttonsLayout.addWidget(self.helpButton)
+
+        self.layout = QtGui.QVBoxLayout(self)
+        self.layout.addWidget(self.buttonsLayout)
+        self.layout.addWidget(self.descriptionLabel)
         self.setLayout(self.layout)
 
-        self.layout.setContentsMargins(5, 0, 5, 0)
+        self.layout.setContentsMargins(0, 0, 0, 0)
         self.checkBox.setFixedWidth(15)
         self.fixButton.setFixedWidth(25)
         self.noFixLabel.setFixedWidth(25)
@@ -115,6 +124,7 @@ class TaskWidget(QtGui.QWidget):
         self.checkButton.clicked.connect(self.taskCheck)
         self.fixButton.clicked.connect(self.taskFix)
         self.checkBox.stateChanged.connect(self.setTaskActive)
+        self.helpButton.clicked.connect(self.showHideDescription)
 
         self.resetColor()
 
@@ -127,6 +137,9 @@ class TaskWidget(QtGui.QWidget):
         else:
             setBgCol(self.checkButton, self.okColor)
 
+    def showHideDescription(self):
+        onOff = self.descriptionLabel.isVisible()
+        self.descriptionLabel.setVisible(not onOff)
 
     def taskCheck(self):
         self.task.check()
@@ -342,7 +355,7 @@ class FakeScene(object):
 
     def reset(self):
         self.data['modelDoublons']       = ['|group1|body_msh', '|group2|body_msh']
-        # self.data['modelShaders']        = ['lambert1', 'lambert2']
+        self.data['modelShaders']        = ['lambert1', 'lambert2']
 
 
         self.data['facialVersion']       = 4.1
