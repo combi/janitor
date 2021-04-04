@@ -9,13 +9,14 @@ class TaskBase(object):
         self.fakeScene   = fakeScene
 
     def check(self, verbose=True):
+        """ Must be implemented by the subclass """
         if verbose:
             print
             print 'Checking %s:' %self.niceName
-            # print 'checkResult =', self.checkResult
 
 
     def fix(self, toFix=None, verbose=True):
+        """ Must be implemented by the subclass, or set to None if the task cannot not have a fix """
         if verbose:
             print
             print 'Fixing %s:' %self.niceName
@@ -185,7 +186,6 @@ class TaskFacialVersion(TaskBase):
             return
 
         if not self.fakeScene: return
-        # print('updating %s to version 4.2' %_toFix)
         print('Fixed %s' %_toFix)
         self.fixResult = _toFix
         self.fakeScene.data['facialVersion'] = 4.2
@@ -195,7 +195,11 @@ class TaskFacialNastyRefEdits(TaskBase):
     def __init__(self, *args, **kwargs):
         super(TaskFacialNastyRefEdits, self).__init__(*args, **kwargs)
         self.niceName = 'Nasty Reference Edits'
-        self.description = 'La scene de facial ne devrait pas contenir certains refEdits. Certains peuvent etre dus a des bugs maya ou dans l\'un de nos tools, d\'autres a des erreurs de manipulations.'
+        self.description = ''\
+        'La scene de facial ne devrait pas contenir certains refEdits.\n'\
+        'Ceux-ci peuvent etre dus a des bugs maya ou\n'\
+        'dans l\'un de nos tools,\n'\
+        'ou encore a des erreurs de manipulations.'
 
     def check(self, verbose=False):
         super(TaskFacialNastyRefEdits, self).check(verbose=False)

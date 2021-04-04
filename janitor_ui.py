@@ -23,6 +23,7 @@ class Colors():
     blue_dim      = QtGui.QColor(50,  050, 110)
     yellow_dim    = QtGui.QColor(180, 180, 000)
 
+    lightGrey     = QtGui.QColor(120, 120, 120)
     grey          = QtGui.QColor(100, 100, 100)
     darkGrey      = QtGui.QColor(050, 050, 050)
     darkerGrey    = QtGui.QColor(040, 040, 040)
@@ -72,20 +73,21 @@ class TaskWidget(QtGui.QWidget):
 
     def __init__(self, task, parent=None):
         super(TaskWidget, self).__init__(parent=parent)
-        self.task = task
+        self.task         = task
+        self.neutralColor = Colors.lightGrey
+        self.okColor      = Colors.green_dim
+        self.pbColor      = Colors.orange_dim
 
         self.checkBox    = QtGui.QCheckBox()
         self.checkButton = QtGui.QPushButton(task.niceName or '')
         self.fixButton   = QtGui.QPushButton('fix')
         self.noFixLabel  = QtGui.QLabel()
         self.helpButton  = QtGui.QPushButton('?')
-        self.descriptionLabel = QtGui.QLabel(self.task.description)
-        self.descriptionLabel.setWordWrap(True)
+        # self.descriptionLabel = QtGui.QLabel(self.task.description)
+        self.descriptionLabel = QtGui.QTextEdit(self.task.description)
+        # self.descriptionLabel.setWordWrap(True)
         self.descriptionLabel.setVisible(False)
-
-        self.neutralColor = Colors.grey
-        self.okColor      = Colors.green_dim
-        self.pbColor      = Colors.orange_dim
+        self.descriptionLabel.setReadOnly(True)
 
 
         if task.active:
@@ -101,7 +103,7 @@ class TaskWidget(QtGui.QWidget):
             self.noFixLabel.setVisible(False)
 
         self.buttonsLayout = LayoutWidget(mode='horizontal', parent=self)
-        self.buttonsLayout.setMargins(5, 0, 5, 0)
+        self.buttonsLayout.setMargins(0, 0, 0, 0)
 
         self.buttonsLayout.addWidget(self.checkBox)
         self.buttonsLayout.addWidget(self.checkButton)
@@ -170,7 +172,8 @@ class JanitorPanel(QtGui.QWidget):
         headerWLayout = LayoutWidget(mode='horizontal', parent=self)
         panelWLayout  = LayoutWidget(mode='vertical', parent=self)
 
-        headerWLayout.setContentsMargins(5, 0, 5, 10)
+        headerWLayout.setContentsMargins(5, 5, 5, 5)
+        panelWLayout.setContentsMargins(5, 5, 5, 5)
         setBgCol(headerWLayout, randomColor())
         setBgCol(panelWLayout, randomColor())
 
@@ -190,6 +193,7 @@ class JanitorPanel(QtGui.QWidget):
         headerWLayout.layout.addSpacing(30)
 
         self.layout.addWidget(headerWLayout)
+        self.layout.addSpacing(10)
         self.layout.addWidget(panelWLayout)
 
         for task in janitor.tasks:
