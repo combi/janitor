@@ -68,8 +68,17 @@ class LayoutWidget(QtGui.QWidget):
 
 
 
-class TaskWidget(QtGui.QWidget):
+# class TaskWidget(QtGui.QWidget):
+class TaskWidget(QtGui.QFrame):
     activeStateChanged = QtCore.Signal()
+
+    styleSheet = ''\
+    'QFrame{'\
+    '    border-radius: 8px;'\
+    '    padding: 2px;'\
+    '    background-color: rgb(200, 60, 102);'\
+    '}'
+    # '    border: 2px solid green;'\
 
     def __init__(self, task, parent=None):
         super(TaskWidget, self).__init__(parent=parent)
@@ -81,7 +90,7 @@ class TaskWidget(QtGui.QWidget):
         self.checkBox    = QtGui.QCheckBox()
         self.checkButton = QtGui.QPushButton(task.niceName or '')
         self.fixButton   = QtGui.QPushButton('fix')
-        self.noFixLabel  = QtGui.QLabel()
+        self.noFixSpace  = QtGui.QWidget()
         self.helpButton  = QtGui.QPushButton('?')
         # self.descriptionLabel = QtGui.QLabel(self.task.description)
         self.descriptionLabel = QtGui.QTextEdit(self.task.description)
@@ -97,10 +106,10 @@ class TaskWidget(QtGui.QWidget):
 
         if self.task.fix is None:
             self.fixButton.setVisible(False)
-            self.noFixLabel.setVisible(True)
+            self.noFixSpace.setVisible(True)
         else:
             self.fixButton.setVisible(True)
-            self.noFixLabel.setVisible(False)
+            self.noFixSpace.setVisible(False)
 
         self.buttonsLayout = LayoutWidget(mode='horizontal', parent=self)
         self.buttonsLayout.setMargins(0, 0, 0, 0)
@@ -108,7 +117,7 @@ class TaskWidget(QtGui.QWidget):
         self.buttonsLayout.addWidget(self.checkBox)
         self.buttonsLayout.addWidget(self.checkButton)
         self.buttonsLayout.addWidget(self.fixButton)
-        self.buttonsLayout.addWidget(self.noFixLabel)
+        self.buttonsLayout.addWidget(self.noFixSpace)
         self.buttonsLayout.addWidget(self.helpButton)
 
         self.layout = QtGui.QVBoxLayout(self)
@@ -119,7 +128,7 @@ class TaskWidget(QtGui.QWidget):
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.checkBox.setFixedWidth(15)
         self.fixButton.setFixedWidth(25)
-        self.noFixLabel.setFixedWidth(25)
+        self.noFixSpace.setFixedWidth(25)
         self.helpButton.setFixedWidth(25)
         self.helpButton.setFixedHeight(25)
 
@@ -129,6 +138,7 @@ class TaskWidget(QtGui.QWidget):
         self.helpButton.clicked.connect(self.showHideDescription)
 
         self.resetColor()
+        # self.setStyleSheet(self.styleSheet)
 
     def resetColor(self):
         setBgCol(self.checkButton, self.neutralColor)
