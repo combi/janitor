@@ -1,11 +1,17 @@
+from collections import OrderedDict
+import copy
+
 class TaskBase(object):
+    niceName    = 'TaskBase'
+    description = 'This task probably does amazing things'
+
     def __init__(self, fakeScene):
         self.checkResult = None
         self.toFix       = None
         self.fixResult   = None
 
-        self.niceName    = self.__class__.__name__
-        self.description = 'This task probably does amazing things'
+        # self.niceName    = self.__class__.__name__
+        # self.description = 'This task probably does amazing things'
         self.fakeScene   = fakeScene
 
     def check(self, verbose=True):
@@ -23,22 +29,35 @@ class TaskBase(object):
 
 
     def checkFixCheck(self, verbose=True):
+        """ Will run the check and if a fix exists, will run the fix and a last check
+            Returns errors found by each check pass.
+        """
+        errors_pass1 = None
+        errors_pass2 = None
+
         self.check(verbose=verbose)
-        if self.fix:
+        errors_pass1 = copy.deepcopy(self.toFix)
+        if self.fix:  # if a fixing function exists
             self.fix(toFix=self.toFix, verbose=verbose)
             self.check(verbose=verbose)
+            errors_pass2 = copy.deepcopy(self.toFix)
+        else:
+            errors_pass2 = errors_pass1
+
+        return (errors_pass1, errors_pass2)
 
 
 class JanitorBase(object):
+    niceName    = 'JanitorBase'
+    description = 'This janitor will probably save you thousands of hours'
+
     def __init__(self, fakeScene=None, verbose=True):
 
         self.verbose  = verbose
         self.tasks    = []
-        self.niceName = ''
         self.fakeScene = fakeScene
 
     def addTask(self, taskType, active=True):
-        # print 'adding task %s' %taskType
         task = taskType(fakeScene=self.fakeScene)
         self.tasks.append(task)
         task.active = active
@@ -72,11 +91,15 @@ class JanitorBase(object):
             task.fix(task.toFix, verbose=self.verbose)
 
 
-    def checkFixCheck(self):
+    def checkFixCheck(self, skipInactives=False):
+        errors = OrderedDict()
         for task in self.tasks:
-            if not task.active:
+            if skipInactives and not task.active:
                 continue
-            task.checkFixCheck(verbose=self.verbose)
+            error = task.checkFixCheck(verbose=self.verbose)
+            if error:
+                errors[task.niceName] = error
+        return errors
 
 
 
@@ -84,12 +107,13 @@ class JanitorBase(object):
 #  MODEL
 # ===================================================================
 class TaskDoublons(TaskBase):
+    niceName    = 'Doublons'
+    description = 'Recense les objets qui ont le meme nom.'
+
     def __init__(self, *args, **kwargs):
         super(TaskDoublons, self).__init__(*args, **kwargs)
-        self.niceName = 'Doublons'
 
         self.fix = None
-        self.description = 'Recense les objets qui ont le meme nom.'
 
     def check(self, verbose=False):
         super(TaskDoublons, self).check(verbose=False)
@@ -102,10 +126,11 @@ class TaskDoublons(TaskBase):
 
 
 class TaskShaders(TaskBase):
+    niceName    = 'Shaders'
+    description = 'Les shaders doivent doivent avoir "_MTL" comme suffixe.'
+
     def __init__(self, *args, **kwargs):
         super(TaskShaders, self).__init__(*args, **kwargs)
-        self.niceName = 'Shaders'
-        self.description = 'Les shaders doivent doivent avoir "_MTL" comme suffixe.'
 
     def check(self, verbose=False):
         super(TaskShaders, self).check(verbose=False)
@@ -146,9 +171,12 @@ class TaskShaders(TaskBase):
 
 
 class ModelCharsJanitor(JanitorBase):
+    niceName    = 'Model Chars'
+    description = 'Will help diagnose Model Chars problems'
+
     def __init__(self, *args, **kwargs):
         super(ModelCharsJanitor, self).__init__(*args, **kwargs)
-        self.niceName = 'Model Chars'
+        # self.niceName = 'Model Chars'
         self.addTask(TaskDoublons)
         self.addTask(TaskShaders)
 
@@ -190,7 +218,6 @@ class TaskFacialVersion(TaskBase):
         self.fixResult = _toFix
         self.fakeScene.data['facialVersion'] = 4.2
 
-
 class TaskFacialNastyRefEdits(TaskBase):
     def __init__(self, *args, **kwargs):
         super(TaskFacialNastyRefEdits, self).__init__(*args, **kwargs)
@@ -231,8 +258,6 @@ class TaskFacialNastyRefEdits(TaskBase):
                 self.fixResult.append(item)
         print('Fixed %s' %self.fixResult)
 
-
-
 class TaskFacialDKsTag(TaskBase):
     def __init__(self, *args, **kwargs):
         super(TaskFacialDKsTag, self).__init__(*args, **kwargs)
@@ -267,14 +292,16 @@ class TaskFacialDKsTag(TaskBase):
                 self.fixResult.append(item)
         print('Fixed %s' %self.fixResult)
 
+
 class FacialJanitor(JanitorBase):
     movie = 'dm4'
-    # movie = 'mig'
+    niceName    = 'Facial'
+    description = 'Will help diagnose Facial Scene problems'
 
     def __init__(self, *args, **kwargs):
         super(FacialJanitor, self).__init__(*args, **kwargs)
 
-        self.niceName = 'Facial'
+        # self.niceName = 'Facial'
 
         self.addTask(TaskFacialVersion)
         self.addTask(TaskFacialNastyRefEdits)
@@ -285,10 +312,11 @@ class FacialJanitor(JanitorBase):
 
 
 class MarioFacialJanitor(JanitorBase):
+    niceName    = 'Facial (project Mario)'
+    description = 'Will help diagnose Facial Scene problems on Mario project'
 
     def __init__(self, *args, **kwargs):
         super(MarioFacialJanitor, self).__init__(*args, **kwargs)
-        self.niceName = 'Mario Facial'
 
 
 
@@ -296,6 +324,9 @@ class MarioFacialJanitor(JanitorBase):
 
 if __name__=="__main__":
     janitor = FacialJanitor(verbose=True)
-    janitor.check()
+    # janitor.check()
     # janitor.fix()
+    print janitor.niceName
 
+    janitor = FacialJanitor
+    print janitor.niceName

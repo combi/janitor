@@ -1,6 +1,7 @@
 import sys
 import random
 from collections import OrderedDict
+# from functools import partial
 
 from PySide import QtGui
 from PySide import QtCore
@@ -15,19 +16,19 @@ class Colors():
     # orange        = QtGui.QColor(200, 100, 000)
     # yellow        = QtGui.QColor(255, 255, 000)
 
-    red_dim       = QtGui.QColor(90, 025, 025)
+    red_dim       = QtGui.QColor(90.0, 025.0, 025.0)
 
-    green_dim     = QtGui.QColor(85, 107, 47)
+    green_dim     = QtGui.QColor(85.0, 107.0, 47.0)
     # orange_dim    = QtGui.QColor(100, 050,  50)
-    orange_dim    = QtGui.QColor(255, 102, 0)
-    blue_dim      = QtGui.QColor(50,  050, 110)
-    yellow_dim    = QtGui.QColor(180, 180, 000)
+    orange_dim    = QtGui.QColor(255.0, 102.0,   0.0)
+    blue_dim      = QtGui.QColor(50.0,   50.0, 110.0)
+    yellow_dim    = QtGui.QColor(180.0, 180.0,   0.0)
 
-    lightGrey     = QtGui.QColor(120, 120, 120)
-    grey          = QtGui.QColor(100, 100, 100)
-    darkGrey      = QtGui.QColor(050, 050, 050)
-    darkerGrey    = QtGui.QColor(040, 040, 040)
-    black         = QtGui.QColor(000, 000, 000)
+    lightGrey     = QtGui.QColor(120.0, 120.0, 120.0)
+    grey          = QtGui.QColor(100.0, 100.0, 100.0)
+    darkGrey      = QtGui.QColor(050.0, 050.0, 050.0)
+    darkerGrey    = QtGui.QColor(040.0, 040.0, 040.0)
+    black         = QtGui.QColor(000.0, 000.0, 000.0)
 
 
 def randomColor(alpha=255):
@@ -68,7 +69,6 @@ class LayoutWidget(QtGui.QWidget):
 
 
 
-# class TaskWidget(QtGui.QWidget):
 class TaskWidget(QtGui.QFrame):
     activeStateChanged = QtCore.Signal()
 
@@ -190,17 +190,20 @@ class JanitorPanel(QtGui.QWidget):
         self.mainCheckBox     = QtGui.QCheckBox()
         self.mainLaunchButton = QtGui.QPushButton('GO')
         self.mainFixButton    = QtGui.QPushButton('fix')
+        self.mainCheckFixCheckButton = QtGui.QPushButton('cfc')
 
         self.mainCheckBox.setFixedWidth(15)
         self.mainFixButton.setFixedWidth(25)
+        self.mainCheckFixCheckButton.setFixedWidth(25)
 
 
 
         headerWLayout.addWidget(self.mainCheckBox)
         headerWLayout.addWidget(self.mainLaunchButton)
         headerWLayout.addWidget(self.mainFixButton)
-        # headerWLayout.layout.addStretch()
-        headerWLayout.layout.addSpacing(30)
+        headerWLayout.addWidget(self.mainCheckFixCheckButton)
+
+        # headerWLayout.layout.addSpacing(30)  # to help padding remaining space
 
         self.layout.addWidget(headerWLayout)
         self.layout.addSpacing(10)
@@ -221,6 +224,7 @@ class JanitorPanel(QtGui.QWidget):
         self.mainCheckBox.stateChanged.connect(self.changeAllTasksActiveStatus)
         self.mainLaunchButton.clicked.connect(self.mainLaunch)
         self.mainFixButton.clicked.connect(self.mainFix)
+        self.mainCheckFixCheckButton.clicked.connect(self.mainCheckFixCheck)
 
 
     def updateTasksColors(self):
@@ -236,45 +240,50 @@ class JanitorPanel(QtGui.QWidget):
 
     def mainFix(self):
         self.debug()
-        self.janitor.checkFixCheck()
+        self.janitor.checkFixCheck(skipInactives=True)
         self.updateTasksColors()
 
+    def mainCheckFixCheck(self):
+        self.debug()
+        errors = self.janitor.checkFixCheck(skipInactives=False)
+        print 'errors =', errors
+        self.updateTasksColors()
 
     def debug(self):
         tasks = [taskWidget.task for taskWidget in self.tasksWidgets]
         states = OrderedDict([(task.niceName,task.active) for task in tasks])
         print
-        print 'states =', states
-        print coreUtils.buildSmartPrintStr(states)
+        print ('states =', states)
+        print (coreUtils.buildSmartPrintStr(states))
 
 
     def updateMainCheckBoxState(self):
         self.mainCheckBox.blockSignals(True)
         tasksStates = [task.active for task in self.janitor.tasks]
         if all(tasksStates):
-            print 'all tasks are active'
+            print ('all tasks are active')
             self.mainCheckBox.setCheckState(QtCore.Qt.Checked)
             self.mainCheckBox.setTristate(False)
         elif any(tasksStates):
-            print 'some tasks are active'
+            print ('some tasks are active')
             self.mainCheckBox.setCheckState(QtCore.Qt.PartiallyChecked)
             self.mainCheckBox.setTristate(True)
         else:
-            print 'no tasks are active'
+            print ('no tasks are active')
             self.mainCheckBox.setCheckState(QtCore.Qt.Unchecked)
             self.mainCheckBox.setTristate(False)
 
-        print 'isTriState:',  self.mainCheckBox.isTristate()
+        print ('isTriState:',  self.mainCheckBox.isTristate())
         self.mainCheckBox.blockSignals(False)
 
     def changeAllTasksActiveStatus(self, arg):
-        print 'arg =', arg
-        print 'isTriState:',  self.mainCheckBox.isTristate()
+        print ('arg =', arg)
+        print ('isTriState:',  self.mainCheckBox.isTristate())
 
         checkState = QtCore.Qt.Checked if arg > 0 else QtCore.Qt.Unchecked
         for taskWidget in self.tasksWidgets:
             taskWidget.blockSignals(True)
-            print 'taskWidget =', taskWidget
+            print ('taskWidget =', taskWidget)
             taskWidget.checkBox.setCheckState(checkState)
             taskWidget.blockSignals(False)
         self.mainCheckBox.setTristate(False)
@@ -296,7 +305,7 @@ class JanitorUi(QtGui.QWidget):
 
 
         # top part with combobox and checkBox and go button
-        self.janitorsCombox   = QtGui.QComboBox(parent=self)
+        self.janitorsCombox    = QtGui.QComboBox(parent=self)
         self.resetFakeSceneBtn = QtGui.QPushButton('ResetFakeScene')
 
 
@@ -327,6 +336,7 @@ class JanitorUi(QtGui.QWidget):
 
 
         janitorsList  = [janitorCmds.FacialJanitor,
+                         janitorCmds.MarioFacialJanitor,
                          janitorCmds.ModelCharsJanitor,
                         ]
         self.janitors = [x(fakeScene=self.fakeScene) for x in janitorsList]
@@ -353,12 +363,6 @@ class JanitorUi(QtGui.QWidget):
             panel.setVisible(vis)
 
 
-    def onTaskCheck(self):
-        print 'asfasdfgsdgfsdfg'
-        sender = self.sender()
-        sender.task.check()
-
-
 
 
 
@@ -383,7 +387,8 @@ class FakeScene(object):
 
 if __name__=="__main__":
 
-
+    # print(sys.version)
+    # print(sys.path)
     app = QtGui.QApplication(sys.argv)
 
     janitor_ui = JanitorUi()
