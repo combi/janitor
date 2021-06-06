@@ -68,8 +68,77 @@ class LayoutWidget(QtGui.QWidget):
         self.layout.setContentsMargins(left, top, right, bottom)
 
 
+class CheckBoxAndButtonsWidget(QtGui.QFrame):
 
-class TaskWidget(QtGui.QFrame):
+    styleSheet = ''\
+    'QFrame{'\
+    '    border-radius: 8px;'\
+    '    padding: 2px;'\
+    '    background-color: rgb(200, 60, 102);'\
+    '}'
+    # '    border: 2px solid green;'\
+
+    def __init__(self, parent=None):
+        super(CheckBoxAndButtonsWidget, self).__init__(parent=parent)
+        self.neutralColor = Colors.lightGrey
+        self.okColor      = Colors.green_dim
+        self.pbColor      = Colors.orange_dim
+
+        self.checkBox     = QtGui.QCheckBox()
+        self.buttonA      = QtGui.QPushButton()
+        self.buttonB      = QtGui.QPushButton()
+        self.buttonC      = QtGui.QPushButton()
+        self.buttonCGhost = QtGui.QWidget()
+        # self.textField    = QtGui.QLabel()
+        self.textField    = QtGui.QTextEdit()
+
+        # self.textField.setWordWrap(True)
+        self.buttonCGhost.setVisible(False)
+        self.textField.setVisible(False)
+        self.textField.setReadOnly(True)
+        self.textField.setSizePolicy(QtGui.QSizePolicy.Ignored ,QtGui.QSizePolicy.Maximum)
+
+        sp = self.sizePolicy()
+        sp.setVerticalPolicy(QtGui.QSizePolicy.Maximum)
+
+        self.buttonsLayout = LayoutWidget(mode='horizontal', parent=self)
+        self.buttonsLayout.setMargins(0, 0, 0, 0)
+
+        self.buttonsLayout.addWidget(self.checkBox)
+        self.buttonsLayout.addWidget(self.buttonA)
+        self.buttonsLayout.addWidget(self.buttonB)
+        self.buttonsLayout.addWidget(self.buttonCGhost)
+        self.buttonsLayout.addWidget(self.buttonC)
+
+        self.layout = QtGui.QVBoxLayout(self)
+        self.layout.addWidget(self.buttonsLayout)
+        self.layout.addWidget(self.textField)
+        self.setLayout(self.layout)
+
+        self.layout.setContentsMargins(0, 0, 0, 0)
+        self.checkBox.setFixedWidth(15)
+        self.buttonB.setFixedWidth(25)
+        self.buttonC.setFixedWidth(25)
+        self.buttonC.setFixedHeight(25)
+        self.buttonCGhost.setFixedWidth(25)
+
+
+    def showHideDescription(self):
+        onOff = self.descriptionLabel.isVisible()
+        self.descriptionLabel.setVisible(not onOff)
+
+    def resetColor(self):
+        setBgCol(self.buttonA, self.neutralColor)
+
+    def updateColor(self, mode=0):
+        print '[updateColor]: mode =', mode
+        if mode==0:
+            setBgCol(self.buttonA, self.okColor)
+        elif mode==1:
+            setBgCol(self.buttonA, self.pbColor)
+
+
+class TaskWidget(CheckBoxAndButtonsWidget):
     activeStateChanged = QtCore.Signal()
 
     styleSheet = ''\
@@ -83,26 +152,25 @@ class TaskWidget(QtGui.QFrame):
     def __init__(self, task, parent=None):
         super(TaskWidget, self).__init__(parent=parent)
         self.task         = task
-        self.neutralColor = Colors.lightGrey
-        self.okColor      = Colors.green_dim
-        self.pbColor      = Colors.orange_dim
 
-        self.checkBox    = QtGui.QCheckBox()
-        self.checkButton = QtGui.QPushButton(task.niceName or '')
-        self.fixButton   = QtGui.QPushButton('fix')
-        self.noFixSpace  = QtGui.QWidget()
-        self.helpButton  = QtGui.QPushButton('?')
+        self.activeCheckBox = self.checkBox
+        self.checkButton    = self.buttonA  # (task.niceName or '')
+        self.fixButton      = self.buttonB  # QtGui.QPushButton('fix')
+        self.helpButton     = self.buttonC  # QtGui.QPushButton('?')
+        self.noFixSpace     = self.buttonCGhost
+
         # self.descriptionLabel = QtGui.QLabel(self.task.description)
-        self.descriptionLabel = QtGui.QTextEdit(self.task.description)
-        # self.descriptionLabel.setWordWrap(True)
-        self.descriptionLabel.setVisible(False)
-        self.descriptionLabel.setReadOnly(True)
+        self.descriptionLabel = self.textField  # QtGui.QTextEdit(self.task.description)
 
+        self.checkButton.setText(task.niceName or '')
+        self.fixButton.setText('fix')
+        self.helpButton.setText('?')
+        self.descriptionLabel.setText(self.task.description)
 
         if task.active:
-            self.checkBox.setCheckState(QtCore.Qt.Checked)
+            self.activeCheckBox.setCheckState(QtCore.Qt.Checked)
         else:
-            self.checkBox.setCheckState(QtCore.Qt.Unchecked)
+            self.activeCheckBox.setCheckState(QtCore.Qt.Unchecked)
 
         if self.task.fix is None:
             self.fixButton.setVisible(False)
@@ -111,30 +179,10 @@ class TaskWidget(QtGui.QFrame):
             self.fixButton.setVisible(True)
             self.noFixSpace.setVisible(False)
 
-        self.buttonsLayout = LayoutWidget(mode='horizontal', parent=self)
-        self.buttonsLayout.setMargins(0, 0, 0, 0)
-
-        self.buttonsLayout.addWidget(self.checkBox)
-        self.buttonsLayout.addWidget(self.checkButton)
-        self.buttonsLayout.addWidget(self.fixButton)
-        self.buttonsLayout.addWidget(self.noFixSpace)
-        self.buttonsLayout.addWidget(self.helpButton)
-
-        self.layout = QtGui.QVBoxLayout(self)
-        self.layout.addWidget(self.buttonsLayout)
-        self.layout.addWidget(self.descriptionLabel)
-        self.setLayout(self.layout)
-
-        self.layout.setContentsMargins(0, 0, 0, 0)
-        self.checkBox.setFixedWidth(15)
-        self.fixButton.setFixedWidth(25)
-        self.noFixSpace.setFixedWidth(25)
-        self.helpButton.setFixedWidth(25)
-        self.helpButton.setFixedHeight(25)
 
         self.checkButton.clicked.connect(self.taskCheck)
         self.fixButton.clicked.connect(self.taskFix)
-        self.checkBox.stateChanged.connect(self.setTaskActive)
+        self.activeCheckBox.stateChanged.connect(self.setTaskActive)
         self.helpButton.clicked.connect(self.showHideDescription)
 
         self.resetColor()
@@ -144,10 +192,8 @@ class TaskWidget(QtGui.QFrame):
         setBgCol(self.checkButton, self.neutralColor)
 
     def updateColor(self):
-        if self.task.toFix:
-            setBgCol(self.checkButton, self.pbColor)
-        else:
-            setBgCol(self.checkButton, self.okColor)
+        hasPbs = 1 if self.task.toFix else 0
+        super(TaskWidget, self).updateColor(mode=hasPbs)
 
     def showHideDescription(self):
         onOff = self.descriptionLabel.isVisible()
@@ -170,54 +216,60 @@ class TaskWidget(QtGui.QFrame):
         self.activeStateChanged.emit()
 
 
-
 class JanitorPanel(QtGui.QWidget):
-    def __init__(self, janitor, parent=None):
+    def __init__(self, janitor, parent=None, oldMode=False):
         super(JanitorPanel, self).__init__(parent=parent)
         self.janitor      = janitor
         self.tasksWidgets = []
 
 
+        sp = self.sizePolicy()
+        sp.setVerticalPolicy(QtGui.QSizePolicy.Maximum)
+
         self.layout = QtGui.QVBoxLayout(self)
-        headerWLayout = LayoutWidget(mode='horizontal', parent=self)
-        panelWLayout  = LayoutWidget(mode='vertical', parent=self)
+        testWidget = CheckBoxAndButtonsWidget()
+        generalSectionWLayout = LayoutWidget(mode='horizontal', parent=self)
+        tasksSectionWLayout  = LayoutWidget(mode='vertical', parent=self)
 
-        headerWLayout.setContentsMargins(5, 5, 5, 5)
-        panelWLayout.setContentsMargins(5, 5, 5, 5)
-        setBgCol(headerWLayout, randomColor())
-        setBgCol(panelWLayout, randomColor())
+        self.layout.setContentsMargins(5, 5, 5, 5)
 
-        self.mainCheckBox     = QtGui.QCheckBox()
-        self.mainLaunchButton = QtGui.QPushButton('GO')
-        self.mainFixButton    = QtGui.QPushButton('fix')
-        self.mainCheckFixCheckButton = QtGui.QPushButton('cfc')
+        setBgCol(testWidget, randomColor())
+        setBgCol(generalSectionWLayout, randomColor())
+        setBgCol(tasksSectionWLayout, randomColor())
 
-        self.mainCheckBox.setFixedWidth(15)
-        self.mainFixButton.setFixedWidth(25)
-        self.mainCheckFixCheckButton.setFixedWidth(25)
+        sp = tasksSectionWLayout.sizePolicy()
+        sp.setVerticalPolicy(QtGui.QSizePolicy.Maximum)
 
 
 
-        headerWLayout.addWidget(self.mainCheckBox)
-        headerWLayout.addWidget(self.mainLaunchButton)
-        headerWLayout.addWidget(self.mainFixButton)
-        headerWLayout.addWidget(self.mainCheckFixCheckButton)
+        self.mainCheckBox            = testWidget.checkBox
+        self.mainLaunchButton        = testWidget.buttonA
+        self.mainFixButton           = testWidget.buttonB
+        self.mainCheckFixCheckButton = testWidget.buttonC
 
-        # headerWLayout.layout.addSpacing(30)  # to help padding remaining space
+        self.mainLaunchButton.setText('GO')
+        self.mainFixButton.setText('fix')
+        self.mainCheckFixCheckButton.setText('cfc')
 
-        self.layout.addWidget(headerWLayout)
+
+        self.layout.addWidget(generalSectionWLayout)
+        self.layout.addWidget(testWidget)
         self.layout.addSpacing(10)
-        self.layout.addWidget(panelWLayout)
+        self.layout.addWidget(tasksSectionWLayout)
 
         for task in janitor.tasks:
             taskWidget = TaskWidget(task)
             self.tasksWidgets.append(taskWidget)
-            panelWLayout.addWidget(taskWidget)
+            tasksSectionWLayout.addWidget(taskWidget)
 
-            taskWidget.activeStateChanged.connect(self.updateMainCheckBoxState)
-
+        # tasksSectionWLayout.layout.addStretch()
         self.layout.addStretch()
 
+
+        # LOGIC
+
+        for taskWidget in self.tasksWidgets:
+            taskWidget.activeStateChanged.connect(self.updateMainCheckBoxState)
 
         self.updateMainCheckBoxState()
 
@@ -227,10 +279,17 @@ class JanitorPanel(QtGui.QWidget):
         self.mainCheckFixCheckButton.clicked.connect(self.mainCheckFixCheck)
 
 
+
     def updateTasksColors(self):
         for taskWidget in self.tasksWidgets:
             if taskWidget.task.active:
                 taskWidget.updateColor()
+
+
+    def resetStates(self):
+        for taskWidget in self.tasksWidgets:
+            taskWidget.task.reset()
+            taskWidget.resetColor()
 
 
     def mainLaunch(self):
@@ -324,13 +383,18 @@ class JanitorUi(QtGui.QWidget):
         self.populateJanitorsPanels()
 
         self.janitorsCombox.currentIndexChanged[int].connect(self.setCurrentJanitor)
-        # self.allTasksCheckBox.stateChanged.connect(self.changeAllTasksActiveStatus)
         self.resetFakeSceneBtn.clicked.connect(self.resetFakeScene)
 
         self.setCurrentJanitor(0)
 
+        sp = self.sizePolicy()
+        sp.setVerticalPolicy(QtGui.QSizePolicy.Maximum)
+
+
     def resetFakeScene(self):
         self.fakeScene.reset()
+        currentJanitorPanel = self.getCurrentJanitorPanel()
+        currentJanitorPanel.resetStates()
 
     def populateJanitors(self):
 
@@ -356,13 +420,17 @@ class JanitorUi(QtGui.QWidget):
 
 
     def setCurrentJanitor(self, janitorIndex):
-        # currentJanitor = self.janitors[janitorIndex]
-
         for i, panel in enumerate(self.janitorsPanels):
             vis = i == janitorIndex
             panel.setVisible(vis)
 
+    def getCurrentJanitor(self):
+        i = self.janitorsCombox.currentIndex()
+        return self.janitors[i]
 
+    def getCurrentJanitorPanel(self):
+        i = self.janitorsCombox.currentIndex()
+        return self.janitorsPanels[i]
 
 
 
@@ -394,9 +462,15 @@ if __name__=="__main__":
     janitor_ui = JanitorUi()
     janitor_ui.show()
 
-    # janitor = janitorCmds.FacialJanitor()
+
+    # fakeScene = FakeScene()
+    # janitor = janitorCmds.FacialJanitor(fakeScene=fakeScene)
+
     # janitorPanel = JanitorPanel(janitor)
     # janitorPanel.show()
 
+
     sys.exit(app.exec_())
+
+
 

@@ -47,6 +47,12 @@ class TaskBase(object):
         return (errors_pass1, errors_pass2)
 
 
+    def reset(self):
+        self.checkResult = None
+        self.toFix       = None
+        self.fixResult   = None
+
+
 class JanitorBase(object):
     niceName    = 'JanitorBase'
     description = 'This janitor will probably save you thousands of hours'
